@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 
+
 def format_tags(tags):
     a = ''
     for s in tags.split():
@@ -8,8 +9,10 @@ def format_tags(tags):
         
     return a[:-1]
 
-def format_filename(date, title):
-    return f'{date}-{title.replace(" ", "-").lower()}.markdown'
+def format_filename(title):
+    
+    date = datetime.today().strftime('%Y-%m-%d')
+    return f'{date}-{title.replace(" ", "-").lower()}.md'
 
 def write_frontmatter(args, current_time):
     f = open(f"./_posts/{format_filename(args.date, args.title)}", "w")
@@ -26,6 +29,7 @@ def write_frontmatter(args, current_time):
     f.close()
     
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description='Create a new post')
     parser.add_argument("date", type=str, help="Provide a date in format yyyy-mm-dd")
     parser.add_argument("title", type=str, help="Provide a title")
