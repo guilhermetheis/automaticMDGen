@@ -4,7 +4,8 @@ This script intents to automatize the flow for a new Jekyll post. Currently I'm 
 
 * ~~Create a simple Front Matter ready .md by simply requiring the Title.~~
   
-    1. Verify if first letter is upper cased
+    1. ~~Verify if first letter is upper cased~~ 
+    2. ~~Need to fully break the code somehow~~ 
 * Create a simple post that should include Front Matter and some kind of body, ideally something like an image with caption. Where the image and caption would also be automatic
 * Finally the last step of the project is to add the capability of safely pushing this .md to the github pages repo (and posting)
 
@@ -37,6 +38,68 @@ We'd like to take the date automatically as we use the script and keep only the 
 
 # Create a simple Front Matter ready .md by simply requiring the Title
 
-To first run this I simply took the code from **Kris van der Mast** and updated it to automatically get the current date and also accept `categories` as my website allows for multiple categories. I need to update the function `format_cat` to check if the first letter of each word is upper cased or not. The code is extremely similar from Kris, but the end goal should differ/improve uppon it. 
+To first run this I simply took the code from **Kris van der Mast** and updated it to automatically get the current date and also accept `categories` as my website allows for multiple categories. I need to update the function `format_cat` to check if the first letter of each word is upper cased or not. The code is extremely similar from Kris, but the end goal should differ/improve upon it. 
 
-This was firstly in the commint from 29/07/2022
+This was firstly in the commit from [29/07/2022](https://github.com/guilhermetheis/automaticMDGen/commit/9d8ad6092ce6f4535210d019b49826cc99cf2ac7). It is already added to the github pages. 
+
+For the improvement of upper-cased words for categories I've seen [this](https://thispointer.com/check-if-first-letter-of-string-is-uppercase-in-python/) post and used the portion of `regex` for ease in the usage. The `format_cat` became the following code
+
+```python
+def format_cat(cats):
+    a = ''
+    for s in cats.split():
+        if re.search("^[A-Z]", s[0]) is not None:
+            a += f'"{s.replace("_", " ")}",'
+            #print("it is uppercase")
+        else:
+            print("The initials of the words need to be upper for the categories")
+            break
+    return a[:-1]
+```
+
+However, the `break` doesn't completely break the code, so running something like `py .\automaticMDGen.py "Automatic post test lower case" "python jekyll front_matter" "Python Automation small text and testing lower case"` generates the following .md
+
+```
+---
+title: Automatic post test lower case
+date: 2022-08-02 12:01:54 +0200
+categories: [False]
+tags: ["python","jekyll","front matter"]
+author: Guilherme Theis
+---
+```
+
+While we'd like to ideally break the code completely (not generate the .md I think).
+
+I've then posted this question on [r/learnpython](https://www.reddit.com/r/learnpython/comments/we71px/trying_to_complete_break_my_program_and_even/) and got the correct understanding. I need to return none and then check whether it is truly none or not. So the overall view of the two necessary functions (`format_cat` and `writte_frontmatter`) need to be like the following
+
+```python
+def format_cat(cats):
+    a = ''
+    for s in cats.split():
+        if re.search("^[A-Z]", s[0]) is not None:
+            a += f'"{s.replace("_", " ")}",'
+            #print("it is uppercase")
+        else:
+            return None
+    return a[:-1]
+
+def format_filename(date, title):
+    return f'{date}-{title.replace(" ", "-").lower()}.markdown'
+
+def write_frontmatter(args, date, current_time):
+    if format_cat(args.cats) is not None:
+        f = open(f"./_posts/{format_filename(date, args.title)}", "w")
+        f.write("---\n")
+        f.write(f"title: {args.title}\n")
+        f.write(f"date: {date} {current_time} +0200\n")
+        f.write(f"categories: [{format_cat(args.cats)}]\n")
+        f.write(f"tags: [{format_tags(args.tags)}]\n")
+        f.write(f"author: {args.author}\n")
+        f.write("---\n")
+        f.close()
+    else:
+        print('Categories need to start in upper case, re-run the code with the correct input')
+        
+        return None
+```
